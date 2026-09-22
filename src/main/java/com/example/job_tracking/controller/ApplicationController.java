@@ -1,0 +1,62 @@
+package com.example.job_tracking.controller;
+
+import com.example.job_tracking.dto.*;
+import com.example.job_tracking.service.ApplicationService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/applications")
+public class ApplicationController {
+
+    private final ApplicationService applicationService;
+
+    public ApplicationController(ApplicationService applicationService) {
+        this.applicationService = applicationService;
+    }
+
+    @PostMapping
+    public ResponseEntity<ApplicationResponse> createApplication(@Valid @RequestBody ApplicationRequest request,
+                                                                   Authentication authentication) {
+        return ResponseEntity.ok(applicationService.createApplication(request, authentication.getName()));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ApplicationResponse>> getMyApplications(Authentication authentication) {
+        return ResponseEntity.ok(applicationService.getMyApplications(authentication.getName()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApplicationResponse> getApplicationById(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(applicationService.getApplicationById(id, authentication.getName()));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApplicationResponse> updateApplication(@PathVariable Long id,
+                                                                   @Valid @RequestBody ApplicationRequest request,
+                                                                   Authentication authentication) {
+        return ResponseEntity.ok(applicationService.updateApplication(id, request, authentication.getName()));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApplicationResponse> updateStatus(@PathVariable Long id,
+                                                              @Valid @RequestBody StatusUpdateRequest request,
+                                                                Authentication authentication) {
+        return ResponseEntity.ok(applicationService.updateStatus(id, request, authentication.getName()));
+    }
+
+    @GetMapping("/{id}/status-history")
+    public ResponseEntity<List<StatusHistoryResponse>> getStatusHistory(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(applicationService.getStatusHistory(id, authentication.getName()));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteApplication(@PathVariable Long id, Authentication authentication) {
+        applicationService.deleteApplication(id, authentication.getName());
+        return ResponseEntity.noContent().build();
+    }
+}
