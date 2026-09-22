@@ -4,9 +4,14 @@ import com.example.job_tracking.dto.CompanyRequest;
 import com.example.job_tracking.dto.CompanyResponse;
 import com.example.job_tracking.service.CompanyService;
 import jakarta.validation.Valid;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -24,6 +29,20 @@ public class CompanyController {
     public ResponseEntity<CompanyResponse> createCompany(@Valid @RequestBody CompanyRequest request, Authentication authentication) {
         return ResponseEntity.ok(companyService.createCompany(request, authentication.getName()));
     }
+
+    @GetMapping("/search")
+public ResponseEntity<Page<CompanyResponse>> searchCompanies(
+        Authentication authentication,
+        @RequestParam(required = false) String name,
+        @RequestParam(required = false) String location,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+
+    Pageable pageable = PageRequest.of(page, size);
+    Page<CompanyResponse> result = companyService.searchCompanies(
+            authentication.getName(), name, location, pageable);
+    return ResponseEntity.ok(result);
+}
 
     @GetMapping
     public ResponseEntity<List<CompanyResponse>> getMyCompanies(Authentication authentication) {

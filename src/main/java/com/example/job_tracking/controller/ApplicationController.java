@@ -1,11 +1,17 @@
 package com.example.job_tracking.controller;
 
 import com.example.job_tracking.dto.*;
+import com.example.job_tracking.entity.ApplicationStatus;
 import com.example.job_tracking.service.ApplicationService;
 import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+
 
 import java.util.List;
 
@@ -35,6 +41,19 @@ public class ApplicationController {
         return ResponseEntity.ok(applicationService.getApplicationById(id, authentication.getName()));
     }
 
+    @GetMapping("/search")
+public ResponseEntity<Page<ApplicationResponse>> searchApplications(
+        Authentication authentication,
+        @RequestParam(required = false) ApplicationStatus status,
+        @RequestParam(required = false) Long companyId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+
+    Pageable pageable = PageRequest.of(page, size);
+    Page<ApplicationResponse> result = applicationService.searchApplications(
+        authentication.getName(), status, companyId, pageable);
+    return ResponseEntity.ok(result);
+}
     @PutMapping("/{id}")
     public ResponseEntity<ApplicationResponse> updateApplication(@PathVariable Long id,
                                                                    @Valid @RequestBody ApplicationRequest request,

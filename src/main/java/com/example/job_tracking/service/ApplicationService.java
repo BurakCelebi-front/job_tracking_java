@@ -6,7 +6,13 @@ import com.example.job_tracking.repository.ApplicationRepository;
 import com.example.job_tracking.repository.CompanyRepository;
 import com.example.job_tracking.repository.StatusHistoryRepository;
 import com.example.job_tracking.repository.UserRepository;
+import com.example.job_tracking.specification.ApplicationSpecification;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -81,6 +87,27 @@ public class ApplicationService {
                 .toList();
     }
 
+    public Page<ApplicationResponse> searchApplications(String userEmail, ApplicationStatus status,  Long companyId, Pageable pageable) {
+        User user = getUserByEmail(userEmail);
+
+        Specification<Application> spec = Specification
+            .where(ApplicationSpecification.hasUser(user))
+            .and(ApplicationSpecification.hasStatus(status))
+            .and(ApplicationSpecification.hasCompanyId(companyId));
+
+            Page<Application> applications = applicationRepository.findAll(spec, pageable);
+
+            return applications.map(app -> new ApplicationResponse(
+                app.getId(),
+                app.getCompany().getId(),
+                app.getCompany().getName(),
+                app.getPositionTitle(),
+                app.getStatus(),
+                app.getAppliedDate(),
+                app.getNotes()
+            ));
+    }
+
     public ApplicationResponse getApplicationById(Long id, String userEmail) {
         User user = getUserByEmail(userEmail);
         Application application = applicationRepository.findByIdAndUser(id, user)
@@ -133,12 +160,13 @@ public class ApplicationService {
                 .toList();
     }
 
+    @Transactional
     public void deleteApplication(Long id, String userEmail) {
         User user = getUserByEmail(userEmail);
         Application application = applicationRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new RuntimeException("Başvuru bulunamadı ya da erişim yetkiniz yok"));
+        .orElseThrow(() -> new RuntimeException("Başvuru bulunamadı ya da erişim yetkiniz yok"));
 
-        statusHistoryRepository.deleteByApplication(application);
-        applicationRepository.delete(application);
-    }
+    statusHistoryRepository.deleteByApplication(application);
+    applicationRepository.delete(application);
+}
 }
