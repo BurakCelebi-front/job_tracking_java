@@ -1,11 +1,22 @@
 package com.example.job_tracking.service;
 
+import com.example.job_tracking.entity.Application;
 import com.example.job_tracking.dto.CompanyRequest;
 import com.example.job_tracking.dto.CompanyResponse;
 import com.example.job_tracking.entity.Company;
 import com.example.job_tracking.entity.User;
 import com.example.job_tracking.repository.CompanyRepository;
 import com.example.job_tracking.repository.UserRepository;
+import com.example.job_tracking.specification.CompanySpecification;
+import com.example.job_tracking.repository.ApplicationRepository;
+
+import com.example.job_tracking.specification.CompanySpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,10 +25,12 @@ import java.util.List;
 public class CompanyService {
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
+    private final ApplicationRepository applicationRepository;
 
-    public CompanyService(CompanyRepository companyRepository, UserRepository userRepository){
+    public CompanyService(CompanyRepository companyRepository, UserRepository userRepository, ApplicationRepository applicationRepository){
         this.companyRepository = companyRepository;
         this.userRepository = userRepository;
+        this.applicationRepository = applicationRepository;
     }
 
     private User getUserByEmail(String email) {
@@ -68,10 +81,36 @@ public class CompanyService {
         return  toResponse(companyRepository.save(company));
     }
 
+    public Page<CompanyResponse> searchCompanies(String userEmail, String name, String location, Pageable pageable) {
+    User user = getUserByEmail(userEmail);
+
+    Specification<Company> spec = Specification
+        .where(CompanySpecification.hasOwner(user))
+        .and(CompanySpecification.nameContains(name))
+        .and(CompanySpecification.locationContains(location));
+
+    Page<Company> companies = companyRepository.findAll(spec, pageable);
+
+    return companies.map(c -> new CompanyResponse(
+        c.getId(),
+        c.getName(),
+        c.getWebsite(),
+        c.getLocation()
+    ));
+}
+
+
     public void deleteCompany(Long id, String userEmail){
-        User owner = getUserByEmail(userEmail);
-        Company company = companyRepository.findByIdAndOwner(id, owner)
+        User user = getUserByEmail(userEmail);
+        Company company = companyRepository.findByIdAndOwner(id, user)
             .orElseThrow(() -> new RuntimeException("The company could not be found, or you do not have access"));
+
+        List<Application> applications = applicationRepository.findByCompany(company);
+        if (!applications.isEmpty()) {
+            throw new RuntimeException(
+                "Bu şirkete bağlı " + applications.size() + " başvuru var. Önce bu başvuruları silin ya da başka bir şirkete taşıyın."
+            );
+        }
 
             companyRepository.delete(company);
     }

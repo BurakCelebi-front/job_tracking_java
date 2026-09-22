@@ -27,7 +27,7 @@ public class StatusHistory {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "applivatoion_id", nullable = false)
+    @JoinColumn(name = "application_id", nullable = false)
     private Application application;
 
     @Enumerated(EnumType.STRING)
