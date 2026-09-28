@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Companies from "./pages/Companies";
+import Applications from "./pages/Applications";
 
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -21,7 +22,7 @@ function AppRoutes() {
         path="/applications"
         element={
           <ProtectedRoute>
-            <div>Applications Page (Coming soon)</div>
+            <Applications/>
           </ProtectedRoute>
         }
       />
