@@ -7,7 +7,7 @@ export interface Application {
     positionTitle: string;
     appliedDate: string;
     status: ApplicationStatus;
-    note?: string;
+    notes?: string;
 }
 
 
@@ -15,4 +15,5 @@ export interface StatusHistoryEntry {
     id: number;
     status: ApplicationStatus;
     changedAt: string;
+    note?: string;
 }
