@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { Application, ApplicationStatus, StatusHistoryEntry } from "./types";
+import type { Application, ApplicationStatus, StatusHistoryEntry } from "../types";
 
 export interface ApplicationRequest {
   companyId: number;

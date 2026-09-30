@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { PlusIcon, SearchIcon, ArrowRightIcon } from "../components/icons";
 import { getApplications } from "../api/applications";
-import type { Application, ApplicationStatus } from "../api/types";
+import type { Application, ApplicationStatus } from "../types";
 import { STATUS_LABELS, STATUS_OPTIONS, statusBadgeClasses } from "../lib/status";
 
 function formatDate(value: string): string {

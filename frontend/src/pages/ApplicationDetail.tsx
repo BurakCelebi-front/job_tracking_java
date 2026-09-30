@@ -8,7 +8,7 @@ import {
   getStatusHistory,
   updateApplicationStatus,
 } from "../api/applications";
-import type { Application, ApplicationStatus, StatusHistoryEntry } from "../api/types";
+import type { Application, ApplicationStatus, StatusHistoryEntry } from "../types";
 import { STATUS_LABELS, STATUS_OPTIONS, statusBadgeClasses, statusDotClasses } from "../lib/status";
 
 function formatDate(value: string): string {

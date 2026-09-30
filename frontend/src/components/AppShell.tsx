@@ -23,7 +23,7 @@ export default function AppShell({ children }: AppShellProps) {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/");
   };
 
   return (
