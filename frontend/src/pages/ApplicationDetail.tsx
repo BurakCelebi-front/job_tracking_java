@@ -12,11 +12,11 @@ import type { Application, ApplicationStatus, StatusHistoryEntry } from "../api/
 import { STATUS_LABELS, STATUS_OPTIONS, statusBadgeClasses, statusDotClasses } from "../lib/status";
 
 function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString("tr-TR", { year: "numeric", month: "long", day: "numeric" });
+  return new Date(value).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
 function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString("en-EN", { dateStyle: "medium", timeStyle: "short" });
+  return new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 }
 
 export default function ApplicationDetail() {
@@ -39,7 +39,7 @@ export default function ApplicationDetail() {
       setApplication(app);
       setHistory(hist);
     } catch {
-      setError("No application was found.");
+      setError("Application not found.");
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ export default function ApplicationDetail() {
       const hist = await getStatusHistory(Number(id));
       setHistory(hist);
     } catch {
-      setError("The status could not be updated.");
+      setError("Couldn't update the status.");
     } finally {
       setStatusUpdating(false);
     }
@@ -73,7 +73,7 @@ export default function ApplicationDetail() {
       await deleteApplication(Number(id));
       navigate("/applications");
     } catch {
-      setError("It couldn't be deleted. Would you like to try again?");
+      setError("Couldn't delete — want to try again?");
       setDeleting(false);
     }
   };
@@ -90,7 +90,7 @@ export default function ApplicationDetail() {
         </Link>
 
         {loading ? (
-          <p className="text-sm text-ink-soft">Loading...</p>
+          <p className="text-sm text-ink-soft">Loading…</p>
         ) : error && !application ? (
           <p className="rounded-lg bg-status-rejected-bg px-3.5 py-2.5 text-sm text-status-rejected">{error}</p>
         ) : application ? (
@@ -118,13 +118,13 @@ export default function ApplicationDetail() {
 
               <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-line pt-6 text-sm">
                 <div>
-                  <dt className="text-ink-soft">Application Date</dt>
+                  <dt className="text-ink-soft">Applied Date</dt>
                   <dd className="mt-1 font-medium text-ink">{formatDate(application.appliedDate)}</dd>
                 </div>
                 <div className="col-span-2">
-                  <dt className="text-ink-soft">Not</dt>
+                  <dt className="text-ink-soft">Notes</dt>
                   <dd className="mt-1 whitespace-pre-wrap text-ink">
-                    {application.notes || <span className="text-ink-soft">No note has been added</span>}
+                    {application.notes || <span className="text-ink-soft">No notes added</span>}
                   </dd>
                 </div>
               </dl>
@@ -143,7 +143,7 @@ export default function ApplicationDetail() {
                   className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3.5 py-2 text-sm font-medium text-status-rejected hover:bg-status-rejected-bg disabled:opacity-60"
                 >
                   <TrashIcon />
-                  {deleting ? "Deleting..." : "Delete"}
+                  {deleting ? "Deleting…" : "Delete"}
                 </button>
 
                 <div className="ml-auto flex items-center gap-2">
@@ -152,7 +152,7 @@ export default function ApplicationDetail() {
                     onChange={(e) => setNextStatus(e.target.value as ApplicationStatus)}
                     className="rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-brand"
                   >
-                    <option value="">Change Status</option>
+                    <option value="">Change status</option>
                     {STATUS_OPTIONS.filter((s) => s !== application.status).map((s) => (
                       <option key={s} value={s}>
                         {STATUS_LABELS[s]}
@@ -164,7 +164,7 @@ export default function ApplicationDetail() {
                     disabled={!nextStatus || statusUpdating}
                     className="rounded-lg bg-brand px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
                   >
-                    {statusUpdating ? "Updating..." : "Update"}
+                    {statusUpdating ? "Updating…" : "Update"}
                   </button>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function ApplicationDetail() {
             <div className="mt-6 rounded-xl border border-line bg-surface p-8 shadow-elevate-sm">
               <h2 className="mb-5 font-display text-base font-semibold text-ink">Status History</h2>
               {history.length === 0 ? (
-                <p className="text-sm text-ink-soft">There is no history yet.</p>
+                <p className="text-sm text-ink-soft">No history yet.</p>
               ) : (
                 <ol className="flex flex-col gap-5">
                   {[...history]

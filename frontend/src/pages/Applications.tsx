@@ -7,7 +7,7 @@ import type { Application, ApplicationStatus } from "../api/types";
 import { STATUS_LABELS, STATUS_OPTIONS, statusBadgeClasses } from "../lib/status";
 
 function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString("en-EN", { year: "numeric", month: "short", day: "numeric" });
+  return new Date(value).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
 export default function Applications() {
@@ -24,7 +24,7 @@ export default function Applications() {
         if (!cancelled) setApplications(data);
       })
       .catch(() => {
-        if (!cancelled) setError("The applications could not be uploaded.");
+        if (!cancelled) setError("Couldn't load applications.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -34,7 +34,7 @@ export default function Applications() {
     };
   }, []);
 
-  // İstatistikler her zaman TÜM listeye göre — arama/filtre bunları etkilemiyor.
+  // Stats are always based on the FULL list — search/filter don't affect them.
   const stats = useMemo(
     () => ({
       total: applications.length,
@@ -62,7 +62,7 @@ export default function Applications() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-xl font-semibold text-ink">My Applications</h1>
-            <p className="mt-1 text-sm text-ink-soft">{applications.length} application</p>
+            <p className="mt-1 text-sm text-ink-soft">{applications.length} applications</p>
           </div>
           <Link
             to="/applications/new"
@@ -75,15 +75,15 @@ export default function Applications() {
 
         <div className="flex gap-3.5">
           <div className="flex flex-1 flex-col gap-1 rounded-xl border border-line bg-surface p-4.5 shadow-elevate-sm">
-            <span className="text-xs font-medium text-ink-soft">Total Application</span>
+            <span className="text-xs font-medium text-ink-soft">Total Applications</span>
             <span className="font-display text-2xl font-semibold text-ink">{stats.total}</span>
           </div>
           <div className="flex flex-1 flex-col gap-1 rounded-xl border border-line bg-surface p-4.5 shadow-elevate-sm">
-            <span className="text-xs font-medium text-ink-soft">In the interview</span>
+            <span className="text-xs font-medium text-ink-soft">In Interview</span>
             <span className="font-display text-2xl font-semibold text-status-interview">{stats.interview}</span>
           </div>
           <div className="flex flex-1 flex-col gap-1 rounded-xl border border-line bg-surface p-4.5 shadow-elevate-sm">
-            <span className="text-xs font-medium text-ink-soft">Received an Offer</span>
+            <span className="text-xs font-medium text-ink-soft">Offers Received</span>
             <span className="font-display text-2xl font-semibold text-status-offer">{stats.offer}</span>
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function Applications() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search for Company or position"
+              placeholder="Search by company or position"
               className="h-10 w-full rounded-lg border border-line bg-surface pl-9 pr-3.5 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand-tint"
             />
           </div>
@@ -103,7 +103,7 @@ export default function Applications() {
             onChange={(e) => setStatusFilter(e.target.value as ApplicationStatus | "")}
             className="h-10 rounded-lg border border-line bg-surface px-3.5 text-sm text-ink-soft outline-none focus:border-brand"
           >
-            <option value="">All Status</option>
+            <option value="">All statuses</option>
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABELS[s]}
@@ -127,7 +127,7 @@ export default function Applications() {
             <p className="px-5 py-6 text-sm text-status-rejected">{error}</p>
           ) : filtered.length === 0 ? (
             <p className="px-5 py-6 text-sm text-ink-soft">
-              {applications.length === 0 ? "There are no applications yet." : "No applications match your search."}
+              {applications.length === 0 ? "You don't have any applications yet." : "No applications match your search."}
             </p>
           ) : (
             filtered.map((app) => (

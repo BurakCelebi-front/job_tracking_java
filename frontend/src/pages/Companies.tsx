@@ -40,7 +40,7 @@ export default function Companies() {
       });
       setApplicationCounts(counts);
     } catch {
-      setError("The companies could not be loaded.");
+      setError("Couldn't load companies.");
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ export default function Companies() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) {
-      setFormError("Company name requiered.");
+      setFormError("Company name is required.");
       return;
     }
     setFormError(null);
@@ -74,7 +74,7 @@ export default function Companies() {
       setShowAddModal(false);
       loadData();
     } catch {
-      setFormError("The companies could not be loaded.");
+      setFormError("Couldn't add the company.");
     } finally {
       setSubmitting(false);
     }
@@ -87,7 +87,7 @@ export default function Companies() {
       await deleteCompany(id);
       loadData();
     } catch {
-      setError("The company could not be deleted (it may be a company with a pending application).");
+      setError("Couldn't delete the company (it may still have applications attached).");
     } finally {
       setDeletingId(null);
     }
@@ -109,7 +109,7 @@ export default function Companies() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-xl font-semibold text-ink">Companies</h1>
-            <p className="mt-1 text-sm text-ink-soft">{companies.length} company registered</p>
+            <p className="mt-1 text-sm text-ink-soft">{companies.length} companies saved</p>
           </div>
           <button
             onClick={openAddModal}
@@ -127,7 +127,7 @@ export default function Companies() {
         {loading ? (
           <p className="text-sm text-ink-soft">Loading…</p>
         ) : cards.length === 0 ? (
-          <p className="text-sm text-ink-soft">You haven't added a company yet.</p>
+          <p className="text-sm text-ink-soft">You haven't added any companies yet.</p>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {cards.map((c) => (
@@ -141,12 +141,12 @@ export default function Companies() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="rounded-full bg-line-soft px-2.5 py-1 text-xs text-ink-soft">
-                      {c.count} başvuru
+                      {c.count} applications
                     </span>
                     <button
                       onClick={() => handleDelete(c.id)}
                       disabled={deletingId === c.id}
-                      aria-label="Delete Company"
+                      aria-label="Delete company"
                       className="flex h-7 w-7 items-center justify-center rounded-md text-ink-soft hover:bg-status-rejected-bg hover:text-status-rejected disabled:opacity-60"
                     >
                       <TrashIcon />
@@ -165,7 +165,7 @@ export default function Companies() {
                     to="/applications"
                     className="inline-flex flex-shrink-0 items-center gap-1 text-xs font-semibold text-brand hover:text-brand-hover"
                   >
-                    View Applications
+                    View applications
                     <ArrowRightIcon />
                   </Link>
                 </div>
@@ -223,7 +223,7 @@ export default function Companies() {
                   type="text"
                   value={form.location}
                   onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))}
-                  placeholder="Remote, İstanbul…"
+                  placeholder="Remote, New York…"
                   className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand-tint"
                 />
               </div>
@@ -234,7 +234,7 @@ export default function Companies() {
                   disabled={submitting}
                   className="rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
                 >
-                  {submitting ? "Adding..." : "Add"}
+                  {submitting ? "Adding…" : "Add"}
                 </button>
                 <button
                   type="button"
