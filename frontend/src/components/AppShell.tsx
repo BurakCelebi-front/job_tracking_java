@@ -18,7 +18,7 @@ const navItems = [
 export default function AppShell({ children }: AppShellProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, email } = useAuth();
+  const { logout, email, fullName } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   const handleLogout = () => {
@@ -30,7 +30,7 @@ export default function AppShell({ children }: AppShellProps) {
     <div className="flex min-h-screen flex-col bg-paper text-ink">
       <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-line bg-surface px-8">
         <div className="flex items-center gap-9">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5 transition hover:opacity-70">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand font-display text-sm font-bold text-white">
               J
             </div>
@@ -65,8 +65,11 @@ export default function AppShell({ children }: AppShellProps) {
           </button>
           {email && (
             <>
-              <span className="hidden text-sm text-ink-soft sm:inline">{email}</span>
-              <span className="hidden h-5 w-px bg-line sm:inline" />
+              <div className="hidden flex-col items-end leading-tight sm:flex">
+                <span className="text-sm font-semibold text-ink">{fullName ?? email}</span>
+                {fullName && <span className="text-xs text-ink-soft">{email}</span>}
+              </div>
+              <span className="hidden h-8 w-px bg-line sm:inline" />
             </>
           )}
           <button
@@ -74,7 +77,7 @@ export default function AppShell({ children }: AppShellProps) {
             className="flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-ink"
           >
             <LogOutIcon />
-            Log out
+            Log Out
           </button>
         </div>
       </header>

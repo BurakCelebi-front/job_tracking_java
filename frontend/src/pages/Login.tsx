@@ -5,9 +5,9 @@ import { login } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import { MailIcon, LockIcon } from "../components/icons";
 
-// Bu ekran kasıtlı olarak uygulamanın light/dark tema anahtarından bağımsız —
-// tasarımdaki gibi her zaman aynı koyu zemin + beyaz kart kombinasyonu.
-// Bu yüzden bg-ink/text-ink gibi tema token'ları yerine sabit hex değerleri kullanıyoruz.
+// This screen is deliberately independent of the app's light/dark theme
+// toggle — always the same dark background + white card, per the design.
+// That's why we use fixed hex values here instead of bg-ink/text-ink tokens.
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -26,7 +26,7 @@ export default function Login() {
       authLogin(response.token, email);
       navigate("/");
     } catch {
-      setError("Login failed. The email address or password is incorrect.");
+      setError("Login failed. Incorrect email or password.");
     } finally {
       setSubmitting(false);
     }
@@ -34,12 +34,12 @@ export default function Login() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0c0d11] px-4">
-      {/* Dekoratif blur blob'lar */}
+      {/* Decorative blurred blobs */}
       <div className="pointer-events-none absolute -right-40 -top-56 h-[620px] w-[620px] rounded-full bg-[#3355d8] opacity-55 blur-[110px]" />
       <div className="pointer-events-none absolute -bottom-52 -left-36 h-[520px] w-[520px] rounded-full bg-[#ff7a59] opacity-30 blur-[120px]" />
 
-      {/* Logo, sol üst */}
-            <Link
+      {/* Logo, top-left */}
+      <Link
         to="/"
         className="absolute left-12 top-9 flex items-center gap-2.5 transition hover:opacity-70"
       >
@@ -49,11 +49,11 @@ export default function Login() {
         <span className="font-display text-base font-semibold text-white/90">Job Tracker</span>
       </Link>
 
-      {/* Kart */}
+      {/* Card */}
       <div className="relative flex w-[420px] max-w-full flex-col gap-[22px] rounded-[20px] bg-white px-10 py-11 shadow-[0_30px_80px_-16px_rgba(0,0,0,0.55),0_8px_24px_rgba(0,0,0,0.22)]">
         <div className="flex flex-col gap-1.5">
-          <h1 className="font-display text-[27px] font-semibold text-[#171717]">Welcome back!</h1>
-          <p className="text-sm text-[#6b6560]">Log in to your account and pick up where you left off.</p>
+          <h1 className="font-display text-[27px] font-semibold text-[#171717]">Welcome back</h1>
+          <p className="text-sm text-[#6b6560]">Sign in to your account and pick up where you left off.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
@@ -70,7 +70,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="sen@sirket.com"
+                placeholder="you@company.com"
                 className="h-12 w-full rounded-[10px] border border-[#e8e5e0] bg-white pl-[42px] pr-3.5 text-sm text-[#171717] outline-none transition placeholder:text-[#aca79f] focus:border-[#3355d8] focus:ring-[3px] focus:ring-[#eef2fd]"
               />
             </div>
@@ -96,12 +96,12 @@ export default function Login() {
             disabled={submitting}
             className="h-[50px] w-full rounded-[10px] bg-[#3355d8] text-[15px] font-semibold text-white shadow-[0_8px_20px_-6px_rgba(51,85,216,0.55)] transition hover:-translate-y-px hover:bg-[#24409e] disabled:opacity-60 disabled:hover:translate-y-0"
           >
-            {submitting ? "Giriş yapılıyor…" : "Giriş Yap"}
+            {submitting ? "Signing in…" : "Sign In"}
           </button>
         </form>
 
         <div className="border-t border-[#e8e5e0] pt-4 text-center text-[13px] text-[#6b6560]">
-          Don't have account?{" "}
+          Don't have an account?{" "}
           <Link to="/register" className="font-semibold text-[#3355d8] hover:text-[#24409e] hover:underline">
             Sign up
           </Link>

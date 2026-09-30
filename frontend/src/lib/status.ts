@@ -6,9 +6,10 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   OFFER: "Offer",
   REJECTED: "Rejected",
 };
- 
+
 export const STATUS_OPTIONS: ApplicationStatus[] = ["APPLIED", "INTERVIEW", "OFFER", "REJECTED"];
- 
+
+// text + background (for the badge)
 export function statusBadgeClasses(status: ApplicationStatus): string {
   switch (status) {
     case "APPLIED":
@@ -21,8 +22,8 @@ export function statusBadgeClasses(status: ApplicationStatus): string {
       return "bg-status-rejected-bg text-status-rejected";
   }
 }
- 
 
+// solid color (for the timeline dot)
 export function statusDotClasses(status: ApplicationStatus): string {
   switch (status) {
     case "APPLIED":
@@ -35,4 +36,3 @@ export function statusDotClasses(status: ApplicationStatus): string {
       return "bg-status-rejected";
   }
 }
- 

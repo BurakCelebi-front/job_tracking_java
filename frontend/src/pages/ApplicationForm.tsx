@@ -45,7 +45,7 @@ export default function ApplicationForm() {
         if (!cancelled) setCompanies(data);
       })
       .catch(() => {
-        if (!cancelled) setServerError("The companies could not be loaded.");
+        if (!cancelled) setServerError("Couldn't load companies.");
       });
 
     if (isEdit && id) {
@@ -60,7 +60,7 @@ export default function ApplicationForm() {
           });
         })
         .catch(() => {
-          if (!cancelled) setServerError("The application could not be uploaded.");
+          if (!cancelled) setServerError("Couldn't load the application.");
         })
         .finally(() => {
           if (!cancelled) setLoading(false);
@@ -79,9 +79,9 @@ export default function ApplicationForm() {
 
   const validate = (): boolean => {
     const nextErrors: Partial<Record<keyof FormState, string>> = {};
-    if (!form.companyId) nextErrors.companyId = "You need to choose a company.";
-    if (!form.positionTitle.trim()) nextErrors.positionTitle = "A position title is required.";
-    if (!form.appliedDate) nextErrors.appliedDate = "The application date is required.";
+    if (!form.companyId) nextErrors.companyId = "Please select a company.";
+    if (!form.positionTitle.trim()) nextErrors.positionTitle = "Position title is required.";
+    if (!form.appliedDate) nextErrors.appliedDate = "Applied date is required.";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -104,7 +104,7 @@ export default function ApplicationForm() {
         isEdit && id ? await updateApplication(Number(id), payload) : await createApplication(payload);
       navigate(`/applications/${result.id}`);
     } catch {
-      setServerError("Couldn't save it. Would you like to try again?");
+      setServerError("Couldn't save — want to try again?");
     } finally {
       setSubmitting(false);
     }
@@ -132,7 +132,7 @@ export default function ApplicationForm() {
           </h1>
 
           {loading ? (
-            <p className="text-sm text-ink-soft">Loading...</p>
+            <p className="text-sm text-ink-soft">Loading…</p>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               {serverError && (
@@ -151,7 +151,7 @@ export default function ApplicationForm() {
                   onChange={(e) => updateField("companyId", e.target.value)}
                   className={`${inputClass} ${errors.companyId ? errorClass : ""}`}
                 >
-                  <option value="">Choose a Company</option>
+                  <option value="">Select a company</option>
                   {companies.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -161,11 +161,11 @@ export default function ApplicationForm() {
                 {errors.companyId && <p className="mt-1 text-xs text-status-rejected">{errors.companyId}</p>}
                 {companies.length === 0 && (
                   <p className="mt-1 text-xs text-ink-soft">
-                    You haven't added a company yet — first{" "}
+                    You haven't added any companies yet — add one from the{" "}
                     <Link to="/companies" className="text-brand hover:underline">
                       Companies
                     </Link>{" "}
-                    add it from the page.
+                    page first.
                   </p>
                 )}
               </div>
@@ -189,7 +189,7 @@ export default function ApplicationForm() {
 
               <div>
                 <label className={labelClass} htmlFor="appliedDate">
-                  Application Date
+                  Applied Date
                 </label>
                 <input
                   id="appliedDate"
@@ -205,14 +205,14 @@ export default function ApplicationForm() {
 
               <div>
                 <label className={labelClass} htmlFor="notes">
-                  Note
+                  Notes
                 </label>
                 <textarea
                   id="notes"
                   rows={4}
                   value={form.notes}
                   onChange={(e) => updateField("notes", e.target.value)}
-                  placeholder="References, contact person, interview details..."
+                  placeholder="Reference, contact person, interview details..."
                   className={`${inputClass} resize-none`}
                 />
               </div>
@@ -223,7 +223,7 @@ export default function ApplicationForm() {
                   disabled={submitting}
                   className="rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
                 >
-                  {submitting ? "Saving" : isEdit ? "Save Changes" : "Add Application"}
+                  {submitting ? "Saving…" : isEdit ? "Save Changes" : "Add Application"}
                 </button>
                 <Link
                   to="/applications"

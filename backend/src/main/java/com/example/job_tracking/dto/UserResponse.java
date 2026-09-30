@@ -13,4 +13,17 @@ public class UserResponse {
     private Long id;
     private String fullname;
     private String email;
+
+    public UserResponse(String fullName, String email) {
+        this.fullName = fullName;
+        this.email = email;
+    }
+ 
+    public String getFullName() {
+        return fullName;
+    }
+ 
+    public String getEmail() {
+        return email;
+    }
 }
