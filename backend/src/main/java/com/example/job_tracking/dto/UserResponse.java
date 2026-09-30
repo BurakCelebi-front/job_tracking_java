@@ -14,13 +14,13 @@ public class UserResponse {
     private String fullname;
     private String email;
 
-    public UserResponse(String fullName, String email) {
-        this.fullName = fullName;
+    public UserResponse(String fullname, String email) {
+        this.fullname = fullname;
         this.email = email;
     }
  
     public String getFullName() {
-        return fullName;
+        return fullname;
     }
  
     public String getEmail() {
