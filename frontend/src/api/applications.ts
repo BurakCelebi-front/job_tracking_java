@@ -5,12 +5,16 @@ export interface ApplicationRequest {
   companyId: number;
   positionTitle: string;
   appliedDate: string;
-  status: ApplicationStatus;
-  note?: string;
+  notes?: string;
 }
 
 export const getApplications = async (): Promise<Application[]> => {
   const response = await apiClient.get<Application[]>("/api/applications");
+  return response.data;
+};
+
+export const getApplicationById = async (id: number): Promise<Application> => {
+  const response = await apiClient.get<Application>(`/api/applications/${id}`);
   return response.data;
 };
 
@@ -24,8 +28,12 @@ export const updateApplication = async (id: number, data: ApplicationRequest): P
   return response.data;
 };
 
-export const updateApplicationStatus = async (id: number, status: ApplicationStatus): Promise<Application> => {
-  const response = await apiClient.patch<Application>(`/api/applications/${id}/status`, { status });
+export const updateApplicationStatus = async (
+  id: number,
+  status: ApplicationStatus,
+  note?: string
+): Promise<Application> => {
+  const response = await apiClient.patch<Application>(`/api/applications/${id}/status`, { status, note });
   return response.data;
 };
 

@@ -1,206 +1,166 @@
-import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
-import {
-    getApplications,
-    createApplication,
-    updateApplicationStatus,
-    deleteApplication,
-    getStatusHistory,
-} from "../api/applications";
-import { getCompanies } from "../api/companies";
-import type { Application, ApplicationStatus, StatusHistoryEntry } from "../api/types";
-import type { Company } from "../types";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import AppShell from "../components/AppShell";
+import { PlusIcon, SearchIcon, ArrowRightIcon } from "../components/icons";
+import { getApplications } from "../api/applications";
+import type { Application, ApplicationStatus } from "../api/types";
+import { STATUS_LABELS, STATUS_OPTIONS, statusBadgeClasses } from "../lib/status";
 
-const STATUS_LABELS: Record<ApplicationStatus, string> = {
-    APPLIED: "Applied",
-    INTERVIEW: "Interview",
-    OFFER: "Offer",
-    REJECTED: "Rejected",
-};
+function formatDate(value: string): string {
+  return new Date(value).toLocaleDateString("en-EN", { year: "numeric", month: "short", day: "numeric" });
+}
 
 export default function Applications() {
-    const [applications, setApplications] = useState<Application[]>([]);
-    const [companies, setCompanies] = useState<Company[]>([]);
-    const [companyId, setCompanyId] = useState("");
-    const [position, setPosition] = useState("");
-    const [appliedDate, setAppliedDate] = useState("");
-    const [note, setNote] = useState("");
-    const [error, setError] = useState("");
-    const [historyMap, setHistoryMap] = useState<Record<number, StatusHistoryEntry[]>>({});
-    const [expandedId, setExpandedId] = useState<number | null>(null);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filterStatus, setFilterStatus] = useState<ApplicationStatus | "">("");
-    const [filterCompanyId, setFilterCompanyId] = useState("");
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
 
-    const loadData = async () => {
-        try {
-            const [apps, comps] = await Promise.all([getApplications(), getCompanies()]);
-            setApplications(apps);
-            setCompanies(comps);
-        } catch (err) {
-            setError("Failed to load data");
-        }
+  useEffect(() => {
+    let cancelled = false;
+    getApplications()
+      .then((data) => {
+        if (!cancelled) setApplications(data);
+      })
+      .catch(() => {
+        if (!cancelled) setError("The applications could not be uploaded.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
     };
+  }, []);
 
-    useEffect(() => {
-        loadData();
-    }, []);
+  // İstatistikler her zaman TÜM listeye göre — arama/filtre bunları etkilemiyor.
+  const stats = useMemo(
+    () => ({
+      total: applications.length,
+      interview: applications.filter((a) => a.status === "INTERVIEW").length,
+      offer: applications.filter((a) => a.status === "OFFER").length,
+    }),
+    [applications]
+  );
 
-    const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        setError("");
-        try {
-            await createApplication({
-            companyId: Number(companyId),
-            positionTitle: position,
-            appliedDate,
-            status: "APPLIED",
-            note,
-        });
-        setCompanyId("");
-        setPosition("");
-        setAppliedDate("");
-        setNote("");
-        loadData();
-    } catch (err) {
-        setError("Failed to add application");
-    }
-};
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return applications.filter((a) => {
+      const matchesTerm =
+        !term ||
+        (a.companyName ?? "").toLowerCase().includes(term) ||
+        a.positionTitle.toLowerCase().includes(term);
+      const matchesStatus = !statusFilter || a.status === statusFilter;
+      return matchesTerm && matchesStatus;
+    });
+  }, [applications, search, statusFilter]);
 
-    const handleStatusChange = async (id: number, status: ApplicationStatus) => {
-      try {
-        await updateApplicationStatus(id, status);
-        loadData();
-        if (expandedId === id) {
-          const history = await getStatusHistory(id);
-          setHistoryMap((prev) => ({ ...prev, [id]: history }));
-        }
-      } catch (err) {
-        setError("Failed to update status");
-      }
-    };
-  
-    const handleDelete = async (id: number) => {
-      try {
-        await deleteApplication(id);
-        loadData();
-      } catch (err) {
-        setError("Failed to delete");
-      }
-    };
-  
-    const handleToggleHistory = async (id: number) => {
-      if (expandedId === id) {
-        setExpandedId(null);
-        return;
-      }
-      try {
-        const history = await getStatusHistory(id);
-        setHistoryMap((prev) => ({ ...prev, [id]: history }));
-        setExpandedId(id);
-      } catch (err) {
-        setError("Failed to load history");
-      }
-    };
-  
-    const filteredApplications = applications.filter((app) => {
-    const matchesSearch = (app.positionTitle ?? "").toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "" || app.status === filterStatus;
-    const matchesCompany = filterCompanyId === "" || app.companyId === Number(filterCompanyId);
-    return matchesSearch && matchesStatus && matchesCompany;
-  });
-  
   return (
-    <div>
-        <h1>Applications</h1>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-  
-        <form onSubmit={handleSubmit}>
-            <select value={companyId} onChange={(e) => setCompanyId(e.target.value)} required>
-                <option value="">Select company</option>
-                {companies.map((c) => (
-                <option key={c.id} value={c.id}>
-                    {c.name}
-                </option>
-                ))}
-            </select>
-            <input
-                placeholder="Position"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                required
-            />
-            <input
-                type="date"
-                value={appliedDate}
-                onChange={(e) => setAppliedDate(e.target.value)}
-                required
-            />
-            <input
-                placeholder="Note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-            />
-            <button type="submit">Add</button>
-        </form>
-
-        <div style={{ margin: "16px 0", display: "flex", gap: 8 }}>
-            <input
-                placeholder="Search by position"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as ApplicationStatus | "")}>
-                <option value="">All statuses</option>
-                    {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                {label}
-                </option>
-                ))}
-            </select>
-            <select value={filterCompanyId} onChange={(e) => setFilterCompanyId(e.target.value)}>
-                <option value="">All companies</option>
-                {companies.map((c) => (
-                <option key={c.id} value={c.id}>
-                    {c.name}
-                </option>
-                ))}
-            </select>
+    <AppShell>
+      <div className="flex flex-col gap-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-xl font-semibold text-ink">My Applications</h1>
+            <p className="mt-1 text-sm text-ink-soft">{applications.length} application</p>
+          </div>
+          <Link
+            to="/applications/new"
+            className="flex h-10 items-center gap-2 rounded-lg bg-brand px-4.5 text-sm font-semibold text-white shadow-elevate-sm hover:bg-brand-hover"
+          >
+            <PlusIcon />
+            New Application
+          </Link>
         </div>
-        <ul>
-            {filteredApplications.map((app) => (
-            <li key={app.id}>
-                <div>
-                    {app.companyName ?? app.companyId} — {app.positionTitle} —{" "}
-                    <select
-                    value={app.status}
-                    onChange={(e) => handleStatusChange(app.id, e.target.value as ApplicationStatus)}
-                    >
-                        {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                        <option key={value} value={value}>
-                        {label}
-                        </option>
-                    ))}
-                    </select>
-                    <button onClick={() => handleToggleHistory(app.id)}>
-                        {expandedId === app.id ? "Hide history" : "History"}
-                    </button>
-                    <button onClick={() => handleDelete(app.id)}>Delete</button>
-            </div>
 
-            {expandedId === app.id && (
-              <ul style={{ marginTop: 8, marginLeft: 16, fontSize: 13 }}>
-                {(historyMap[app.id] ?? []).map((entry) => (
-                  <li key={entry.id}>
-                    {STATUS_LABELS[entry.status]} — {new Date(entry.changedAt).toLocaleString()}
-                  </li>
-                ))}
-                    {(historyMap[app.id]?.length ?? 0) === 0 && <li>No history yet</li>}
-                </ul>
-                )}
-            </li>
+        <div className="flex gap-3.5">
+          <div className="flex flex-1 flex-col gap-1 rounded-xl border border-line bg-surface p-4.5 shadow-elevate-sm">
+            <span className="text-xs font-medium text-ink-soft">Total Application</span>
+            <span className="font-display text-2xl font-semibold text-ink">{stats.total}</span>
+          </div>
+          <div className="flex flex-1 flex-col gap-1 rounded-xl border border-line bg-surface p-4.5 shadow-elevate-sm">
+            <span className="text-xs font-medium text-ink-soft">In the interview</span>
+            <span className="font-display text-2xl font-semibold text-status-interview">{stats.interview}</span>
+          </div>
+          <div className="flex flex-1 flex-col gap-1 rounded-xl border border-line bg-surface p-4.5 shadow-elevate-sm">
+            <span className="text-xs font-medium text-ink-soft">Received an Offer</span>
+            <span className="font-display text-2xl font-semibold text-status-offer">{stats.offer}</span>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search for Company or position"
+              className="h-10 w-full rounded-lg border border-line bg-surface pl-9 pr-3.5 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand-tint"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as ApplicationStatus | "")}
+            className="h-10 rounded-lg border border-line bg-surface px-3.5 text-sm text-ink-soft outline-none focus:border-brand"
+          >
+            <option value="">All Status</option>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </option>
             ))}
-        </ul>
-    </div>
+          </select>
+        </div>
+
+        <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-elevate-sm">
+          <div className="grid grid-cols-[2fr_2fr_1fr_1fr_110px] px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-ink-soft bg-line-soft">
+            <div>Company</div>
+            <div>Position</div>
+            <div>Status</div>
+            <div>Date</div>
+            <div />
+          </div>
+
+          {loading ? (
+            <p className="px-5 py-6 text-sm text-ink-soft">Loading…</p>
+          ) : error ? (
+            <p className="px-5 py-6 text-sm text-status-rejected">{error}</p>
+          ) : filtered.length === 0 ? (
+            <p className="px-5 py-6 text-sm text-ink-soft">
+              {applications.length === 0 ? "There are no applications yet." : "No applications match your search."}
+            </p>
+          ) : (
+            filtered.map((app) => (
+              <div
+                key={app.id}
+                className="grid grid-cols-[2fr_2fr_1fr_1fr_110px] items-center border-t border-line px-5 py-4 hover:bg-paper"
+              >
+                <div className="text-sm font-semibold text-ink">{app.companyName}</div>
+                <div className="text-sm text-ink-soft">{app.positionTitle}</div>
+                <div>
+                  <span
+                    className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadgeClasses(
+                      app.status
+                    )}`}
+                  >
+                    {STATUS_LABELS[app.status]}
+                  </span>
+                </div>
+                <div className="text-[13px] text-ink-soft">{formatDate(app.appliedDate)}</div>
+                <div>
+                  <Link
+                    to={`/applications/${app.id}`}
+                    className="inline-flex items-center gap-1 text-[13px] font-semibold text-brand hover:text-brand-hover"
+                  >
+                    View
+                    <ArrowRightIcon />
+                  </Link>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </AppShell>
   );
 }
