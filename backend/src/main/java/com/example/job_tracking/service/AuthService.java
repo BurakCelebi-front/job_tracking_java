@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.example.job_tracking.dto.AuthResponse;
 import com.example.job_tracking.dto.LoginRequest;
 import com.example.job_tracking.dto.RegisterRequest;
+import com.example.job_tracking.dto.UserResponse;
 import com.example.job_tracking.entity.User;
 import com.example.job_tracking.repository.UserRepository;
 import com.example.job_tracking.security.JwtService;
@@ -53,5 +54,13 @@ public class AuthService {
 
         String token = jwtService.generateToken(request.getEmail());
         return new AuthResponse(token);
+    }
+
+    // Uses your existing UserResponse DTO (id, fullname, email — note the
+    // lowercase "fullname" there, matching its field name via @AllArgsConstructor).
+    public UserResponse getCurrentUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        return new UserResponse(user.getId(), user.getFullName(), user.getEmail());
     }
 }
