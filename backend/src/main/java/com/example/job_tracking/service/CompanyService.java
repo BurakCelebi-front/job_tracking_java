@@ -108,7 +108,8 @@ public class CompanyService {
         List<Application> applications = applicationRepository.findByCompany(company);
         if (!applications.isEmpty()) {
             throw new RuntimeException(
-                "Bu şirkete bağlı " + applications.size() + " başvuru var. Önce bu başvuruları silin ya da başka bir şirkete taşıyın."
+                "There are  " + applications.size() + " apps associated with this company. Please delete these apps or transfer them to another company first."
+                
             );
         }
 

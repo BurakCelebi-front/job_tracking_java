@@ -16,7 +16,7 @@ public class ApplicationResponse {
     private Long id;
     private Long companyId;
     private String companyName;
-    private String postionName;
+    private String positionName;
     private ApplicationStatus status;
     private LocalDate appliedDate;
     private String notes;
