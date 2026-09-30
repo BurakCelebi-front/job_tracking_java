@@ -35,23 +35,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setFullNameState(null);
   };
 
-  // Whenever there's a token but no fullName cached yet — right after a fresh
-  // login/register, or an existing session from before we started tracking
-  // fullName — fetch it once from /api/auth/me and cache it.
   useEffect(() => {
     if (!token || fullName) return;
     let cancelled = false;
-
     getCurrentUser()
       .then((user) => {
         if (cancelled) return;
         localStorage.setItem("fullName", user.fullName);
         setFullNameState(user.fullName);
       })
-      .catch(() => {
-        // token expired/invalid, or /me not reachable — fall back to email in the UI
-      });
-
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
