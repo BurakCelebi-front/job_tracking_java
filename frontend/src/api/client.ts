@@ -1,7 +1,9 @@
 import axios from "axios";
 
+// Vite only exposes env vars prefixed with VITE_. Falls back to localhost
+// so local development (`pnpm dev`) keeps working untouched.
 const apiClient = axios.create({
-    baseURL: "http://localhost:8080",
+    baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080",
 });
 
 
