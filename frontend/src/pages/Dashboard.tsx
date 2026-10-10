@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import AppShell from "../components/AppShell";
 import { getApplications } from "../api/applications";
 import { getCompanies } from "../api/companies";
 import { ArrowRightIcon, CheckIcon } from "../components/icons";
 import PipelineBackground from "../components/PipelineBackground";
 
-// This is the site's home page ("/"). Logged out, it's a public marketing
-// page. Logged in, it becomes a "getting started" guide. Content here is
-// deliberately in English (unlike the rest of the app) — the home page is
-// the part a wider/English-speaking audience will see first.
+
 export default function Dashboard() {
   const { token, email } = useAuth();
 
@@ -54,6 +52,8 @@ const PIPELINE = [
 ];
 
 function PublicHome() {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <div className="flex min-h-screen flex-col bg-paper text-ink">
       <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-line bg-surface px-6 sm:px-10">
@@ -64,6 +64,14 @@ function PublicHome() {
           <span className="font-display text-base font-semibold text-ink">Job Tracker</span>
         </Link>
         <div className="flex items-center gap-5">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-sm hover:bg-paper"
+          >
+            {theme === "dark" ? "☀️" : "🌙"}
+          </button>
           <Link to="/login" className="text-sm font-semibold text-ink-soft hover:text-ink">
             Sign In
           </Link>
