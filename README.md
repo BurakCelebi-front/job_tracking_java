@@ -8,14 +8,23 @@ This is the **Java + Spring Boot** implementation of the project. It's the first
   <img src="docs/pipeline-animation.gif" alt="Animated pipeline: a CV travels from a candidate to a company, then branches into an offer or a rejection" width="640">
 </p>
 
+## Live demo
+
+- **App**: [job-tracking-java-zeta.vercel.app](https://job-tracking-java-zeta.vercel.app/)
+- **API** (Swagger UI): [job-tracking-java.onrender.com/swagger-ui/index.html](https://job-tracking-java.onrender.com/swagger-ui/index.html)
+
+Both run on free tiers — see [Known limitations](#known-limitations) for what that means in practice (a short wake-up delay after idle periods).
+
 ## Table of contents
 
+- [Live demo](#live-demo)
 - [Screenshots](#screenshots)
 - [Tech stack](#tech-stack)
 - [Architecture](#architecture)
 - [Data model](#data-model)
 - [API endpoints](#api-endpoints)
 - [Getting started](#getting-started)
+- [Deployment](#deployment)
 - [Testing](#testing)
 - [Testing the API with Postman](#testing-the-api-with-postman)
 - [Design notes](#design-notes)
@@ -159,6 +168,34 @@ The app starts on `http://localhost:5173` and is already configured (`src/api/cl
 
 Open `http://localhost:5173`, sign up, and start tracking applications.
 
+## Deployment
+
+The [live demo](#live-demo) above runs across three free-tier services. This is how it's wired together:
+
+**Database — Supabase.** A Supabase project provides the Postgres instance. Its pooled connection string (Session pooler, `aws-0-<region>.pooler.supabase.com:5432`) is split into the three JDBC variables below.
+
+**Backend — Render.** Deployed as a Docker-based Web Service from `backend/Dockerfile` (`eclipse-temurin:21`), with `backend` as the service's root directory. Render assigns the listening port at runtime via `$PORT`, so the start command passes it through explicitly: `java -jar target/*.jar --server.port=$PORT`.
+
+Environment variables (Spring maps `SCREAMING_SNAKE_CASE` env vars to the equivalent dotted `application.properties` key automatically):
+
+| Variable | Value |
+|---|---|
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://<supabase-pooler-host>:5432/postgres` |
+| `SPRING_DATASOURCE_USERNAME` | Supabase pooler username, `postgres.<project-ref>` |
+| `SPRING_DATASOURCE_PASSWORD` | the database password set when creating the Supabase project |
+| `SPRING_JPA_HIBERNATE_DDL_AUTO` | `update` |
+| `JWT_SECRET` | a long random string, generated once for this deployment |
+| `JWT_EXPIRATION_MS` | `86400000` |
+| `CORS_ALLOWED_ORIGINS` | comma-separated allowed origins, e.g. `http://localhost:5173,https://<your-frontend>.vercel.app` |
+
+**Frontend — Vercel.** Deployed with `frontend` as the root directory; Vite is auto-detected, so build command and output directory need no changes. One environment variable:
+
+| Variable | Value |
+|---|---|
+| `VITE_API_URL` | the Render backend's URL, e.g. `https://job-tracking-java.onrender.com` |
+
+**How the two sides find each other.** Neither URL is hardcoded. The frontend reads `VITE_API_URL` at build time (`src/api/client.ts`); the backend reads `CORS_ALLOWED_ORIGINS` at runtime (`SecurityConfig.java`) and only accepts requests from the origins listed there. Moving either service to a new URL later is an environment variable update, not a code change.
+
 ## Testing
 
 The backend has controller and service tests for all three feature areas:
@@ -194,8 +231,9 @@ Being upfront about what's intentionally out of scope for a learning/comparison 
 - `UserController` (`/api/users/me`) and `AuthController` (`/api/auth/me`) currently duplicate the same "current user" lookup — a leftover from iterating on the `/me` endpoint. Harmless, but should be collapsed into one.
 - No refresh tokens — a JWT simply expires after `jwt.expiration-ms` and the user has to log in again.
 - No rate limiting or account lockout on login.
-- `spring.jpa.hibernate.ddl-auto=update` is fine for local development; a real deployment would use versioned migrations (Flyway/Liquibase) instead.
+- `spring.jpa.hibernate.ddl-auto=update` is used for the live demo's database too; a real deployment would use versioned migrations (Flyway/Liquibase) instead.
 - No CI pipeline yet — tests are run locally with `./mvnw test`.
+- The live demo runs on free tiers: Render's free Web Service spins down after ~15 minutes without traffic, so the first request after a while takes about a minute to wake it back up (not a failure — just the free-tier trade-off). Supabase pauses a free project after a week of total inactivity, restorable with one click from its dashboard.
 
 ## Roadmap
 
