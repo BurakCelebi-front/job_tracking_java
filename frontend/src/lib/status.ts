@@ -1,4 +1,4 @@
-import type { ApplicationStatus } from "../api/types";
+import type { ApplicationStatus } from "../types";
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   APPLIED: "Applied",
