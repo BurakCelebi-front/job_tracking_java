@@ -66,27 +66,31 @@ export default function PipelineBackground() {
         {/* user node */}
         <g transform="translate(40, 100)">
           <circle r="20" className="fill-brand-tint" />
-          <g className="stroke-brand" fill="none" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="0" cy="-4.5" r="5" />
-            <path d="M -8.5 10.5 a 8.5 7.2 0 0 1 17 0" />
-          </g>
+          <text textAnchor="middle" dominantBaseline="central" fontSize="22" y="1">
+            👤
+          </text>
         </g>
 
         {/* company node, sitting right where both paths meet before diverging */}
         <g transform="translate(210, 100)">
           <circle r="18" className="fill-surface stroke-line" strokeWidth={1.6} />
-          <g className="stroke-ink-soft" fill="none" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-            <rect x="-7.2" y="-3.5" width="14.4" height="10.2" rx="1.4" />
-            <path d="M -3.8 -3.5 v-2.2 a 1.7 1.7 0 0 1 1.7 -1.7 h4.2 a 1.7 1.7 0 0 1 1.7 1.7 v2.2" />
-          </g>
+          <text textAnchor="middle" dominantBaseline="central" fontSize="20" y="1">
+            🏢
+          </text>
         </g>
 
         {/* offer / rejected outcome markers */}
         <g transform="translate(620, 40)">
           <circle r="15.5" className="fill-status-offer-bg" />
+          <text textAnchor="middle" dominantBaseline="central" fontSize="17" y="1">
+            🎉
+          </text>
         </g>
         <g transform="translate(620, 160)">
           <circle r="15.5" className="fill-status-rejected-bg" />
+          <text textAnchor="middle" dominantBaseline="central" fontSize="17" y="1">
+            📭
+          </text>
         </g>
 
         {/* the two traveling CVs — staggered so both stories play out clearly */}
