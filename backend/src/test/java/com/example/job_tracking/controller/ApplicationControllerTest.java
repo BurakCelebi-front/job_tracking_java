@@ -104,7 +104,7 @@ class ApplicationControllerTest {
         mockMvc.perform(get("/api/applications"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(100))
-                .andExpect(jsonPath("$[0].positionName").value("Backend Developer"));
+                .andExpect(jsonPath("$[0].positionTitle").value("Backend Developer"));
     }
 
     // ---------- GET /api/applications/{id} ----------
