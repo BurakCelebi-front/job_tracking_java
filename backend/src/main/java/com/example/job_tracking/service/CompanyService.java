@@ -5,18 +5,15 @@ import com.example.job_tracking.dto.CompanyRequest;
 import com.example.job_tracking.dto.CompanyResponse;
 import com.example.job_tracking.entity.Company;
 import com.example.job_tracking.entity.User;
+import com.example.job_tracking.exception.ConflictException;
+import com.example.job_tracking.exception.ResourceNotFoundException;
 import com.example.job_tracking.repository.CompanyRepository;
 import com.example.job_tracking.repository.UserRepository;
-import com.example.job_tracking.specification.CompanySpecification;
 import com.example.job_tracking.repository.ApplicationRepository;
-
 import com.example.job_tracking.specification.CompanySpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,7 +32,7 @@ public class CompanyService {
 
     private User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private CompanyResponse toResponse(Company company) {
@@ -65,14 +62,14 @@ public class CompanyService {
     public CompanyResponse getCompanyById(Long id, String userEmail) {
         User owner = getUserByEmail(userEmail);
         Company company = companyRepository.findByIdAndOwner(id, owner)
-            .orElseThrow(() -> new RuntimeException("The company could not be found, or you do not have access"));
+            .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
         return toResponse(company);
     }
 
     public CompanyResponse updateCompany(Long id, CompanyRequest request, String userEmail) {
         User owner = getUserByEmail(userEmail);
         Company company = companyRepository.findByIdAndOwner(id, owner)
-            .orElseThrow(() -> new RuntimeException("The company could not be found, or you do not have access"));
+            .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
 
         company.setName(request.getName());
         company.setWebsite(request.getWebsite());
@@ -103,13 +100,12 @@ public class CompanyService {
     public void deleteCompany(Long id, String userEmail){
         User user = getUserByEmail(userEmail);
         Company company = companyRepository.findByIdAndOwner(id, user)
-            .orElseThrow(() -> new RuntimeException("The company could not be found, or you do not have access"));
+            .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
 
         List<Application> applications = applicationRepository.findByCompany(company);
         if (!applications.isEmpty()) {
-            throw new RuntimeException(
-                "There are  " + applications.size() + " apps associated with this company. Please delete these apps or transfer them to another company first."
-                
+            throw new ConflictException(
+                "There are " + applications.size() + " applications linked to this company. Delete them or move them to another company first."
             );
         }
 

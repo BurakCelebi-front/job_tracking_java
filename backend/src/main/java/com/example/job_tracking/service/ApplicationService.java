@@ -2,6 +2,7 @@ package com.example.job_tracking.service;
 
 import com.example.job_tracking.dto.*;
 import com.example.job_tracking.entity.*;
+import com.example.job_tracking.exception.ResourceNotFoundException;
 import com.example.job_tracking.repository.ApplicationRepository;
 import com.example.job_tracking.repository.CompanyRepository;
 import com.example.job_tracking.repository.StatusHistoryRepository;
@@ -38,7 +39,7 @@ public class ApplicationService {
 
     private User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private ApplicationResponse toResponse(Application app) {
@@ -57,7 +58,7 @@ public class ApplicationService {
         User user = getUserByEmail(userEmail);
 
         Company company = companyRepository.findByIdAndOwner(request.getCompanyId(), user)
-                .orElseThrow(() -> new RuntimeException("Şirket bulunamadı ya da erişim yetkiniz yok"));
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
 
         Application application = new Application();
         application.setUser(user);
@@ -111,17 +112,17 @@ public class ApplicationService {
     public ApplicationResponse getApplicationById(Long id, String userEmail) {
         User user = getUserByEmail(userEmail);
         Application application = applicationRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new RuntimeException("Başvuru bulunamadı ya da erişim yetkiniz yok"));
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
         return toResponse(application);
     }
 
     public ApplicationResponse updateApplication(Long id, ApplicationRequest request, String userEmail) {
         User user = getUserByEmail(userEmail);
         Application application = applicationRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new RuntimeException("Başvuru bulunamadı ya da erişim yetkiniz yok"));
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
 
         Company company = companyRepository.findByIdAndOwner(request.getCompanyId(), user)
-                .orElseThrow(() -> new RuntimeException("Şirket bulunamadı ya da erişim yetkiniz yok"));
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
 
         application.setCompany(company);
         application.setPositionTitle(request.getPositionTitle());
@@ -134,7 +135,7 @@ public class ApplicationService {
     public ApplicationResponse updateStatus(Long id, StatusUpdateRequest request, String userEmail) {
         User user = getUserByEmail(userEmail);
         Application application = applicationRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new RuntimeException("Başvuru bulunamadı ya da erişim yetkiniz yok"));
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
 
         application.setStatus(request.getStatus());
         Application saved = applicationRepository.save(application);
@@ -152,7 +153,7 @@ public class ApplicationService {
     public List<StatusHistoryResponse> getStatusHistory(Long id, String userEmail) {
         User user = getUserByEmail(userEmail);
         Application application = applicationRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new RuntimeException("Başvuru bulunamadı ya da erişim yetkiniz yok"));
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
 
         return statusHistoryRepository.findByApplicationOrderByChangedAtAsc(application)
                 .stream()
@@ -164,7 +165,7 @@ public class ApplicationService {
     public void deleteApplication(Long id, String userEmail) {
         User user = getUserByEmail(userEmail);
         Application application = applicationRepository.findByIdAndUser(id, user)
-        .orElseThrow(() -> new RuntimeException("Başvuru bulunamadı ya da erişim yetkiniz yok"));
+        .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
 
     statusHistoryRepository.deleteByApplication(application);
     applicationRepository.delete(application);

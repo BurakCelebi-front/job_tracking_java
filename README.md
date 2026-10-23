@@ -1,5 +1,7 @@
 # Job Tracker
 
+![CI](https://github.com/BurakCelebi-front/job_tracking_java/actions/workflows/ci.yml/badge.svg)
+
 A full-stack job application tracker: register, save the companies you're applying to, log each application, and move it through a status pipeline (**Applied → Interview → Offer / Rejected**) with a full audit trail of every status change.
 
 This is the **Java + Spring Boot** implementation of the project. It's the first of two planned backends for the same app — a companion **Python + FastAPI** version is planned next, built against the same React frontend and the same feature set, as a hands-on comparison between the two stacks.
@@ -207,6 +209,8 @@ cd backend
 
 Covers: `AuthControllerTest`, `AuthServiceTest`, `CompanyControllerTest`, `CompanyServiceTest`, `ApplicationControllerTest`, `ApplicationServiceTest`, plus a context-load smoke test (`JobTrackingApplicationTests`).
 
+**CI:** every push and pull request runs the backend build + tests against a real PostgreSQL service container, and type-checks + builds the frontend (`.github/workflows/ci.yml`).
+
 ## Testing the API with Postman
 
 1. `POST /api/auth/register` with a JSON body (`fullname`, `email`, `password`) → copy the `token` from the response.
@@ -222,6 +226,8 @@ A few deliberate choices worth calling out:
 - **Ownership enforced in the service layer**, not just by hiding UI — every company/application lookup is scoped by the caller's id (`findByIdAndOwner`, `findByIdAndUser`), so one user can never read or modify another user's data even by guessing an id.
 - **Dark mode is a CSS variable swap, not a second stylesheet.** Tailwind v4's `@theme` block defines the design tokens once; a `.dark` class on `<html>` overrides the same variable names, so every component that uses `bg-paper`/`text-ink`/etc. is dark-mode-aware for free.
 - **The animated pipeline on the dashboard** (candidate → company → offer/rejection, shown above) is hand-built SVG + SMIL (`<animateMotion>`), not a GIF or a JS animation library — it's a few KB and fully CSS/SVG driven.
+- **Consistent error responses.** A global `@RestControllerAdvice` maps errors to proper status codes with a JSON body (`status`, `error`, `message`, optional per-field `errors`): 400 validation, 401 bad credentials / missing or expired token, 404 not found (also used for other users' data, so ids can't be probed), 409 duplicate email or company still in use, 429 too many failed logins.
+- **Brute-force protection.** After 5 failed logins for the same email within 15 minutes, further attempts are rejected with 429 until the window passes. The counter is in memory — fine for a single instance; multiple instances would need a shared store such as Redis.
 - **English-only UI.** The app was originally built with mixed Turkish/English copy; it was fully translated to English so it reads consistently for any audience reviewing the project.
 
 ## Known limitations
@@ -230,10 +236,9 @@ Being upfront about what's intentionally out of scope for a learning/comparison 
 
 - `UserController` (`/api/users/me`) and `AuthController` (`/api/auth/me`) currently duplicate the same "current user" lookup — a leftover from iterating on the `/me` endpoint. Harmless, but should be collapsed into one.
 - No refresh tokens — a JWT simply expires after `jwt.expiration-ms` and the user has to log in again.
-- No rate limiting or account lockout on login.
 - `spring.jpa.hibernate.ddl-auto=update` is used for the live demo's database too; a real deployment would use versioned migrations (Flyway/Liquibase) instead.
-- No CI pipeline yet — tests are run locally with `./mvnw test`.
-- The live demo runs on free tiers: Render's free Web Service spins down after ~15 minutes without traffic, so the first request after a while takes about a minute to wake it back up (not a failure — just the free-tier trade-off). Supabase pauses a free project after a week of total inactivity, restorable with one click from its dashboard.
+- The live demo runs on free tiers: Render's free Web Service spins down after ~15 minutes without traffic, so the first request after a while takes about a minute to wake it back up (not a failure — just the free-tier trade-off). Supabase pauses a free project after a week of total inactivity; a scheduled GitHub Action (`.github/workflows/keep-alive.yml`) calls `GET /api/health` — which runs a database query — every 3 days to prevent that. (GitHub disables scheduled workflows after 60 days without repository activity; re-enable it from the Actions tab if that happens.)
+- The account lockout is keyed by email, so someone who knows a user's email could deliberately lock that account for 15 minutes. A production setup would combine it with per-IP limits and CAPTCHA.
 
 ## Roadmap
 

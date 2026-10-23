@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
+import { getErrorMessage } from "../api/client";
 import { MailIcon, LockIcon, UserIcon } from "../components/icons";
 
 // Same as Login — independent of the theme toggle, see the note there.
@@ -24,8 +25,8 @@ export default function Register() {
       const response = await register({ fullname, email, password });
       authLogin(response.token, email);
       navigate("/");
-    } catch {
-      setError("Registration failed. This email may already be in use.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Registration failed. This email may already be in use."));
     } finally {
       setSubmitting(false);
     }

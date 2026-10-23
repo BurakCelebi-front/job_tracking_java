@@ -19,6 +19,8 @@ import java.util.List;
 @RequestMapping("/api/companies")
 public class CompanyController {
 
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final CompanyService companyService;
 
     public CompanyController(CompanyService companyService) {
@@ -38,7 +40,8 @@ public ResponseEntity<Page<CompanyResponse>> searchCompanies(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size) {
 
-    Pageable pageable = PageRequest.of(page, size);
+    // Clamp paging input so a client cannot request huge pages.
+    Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_PAGE_SIZE));
     Page<CompanyResponse> result = companyService.searchCompanies(
             authentication.getName(), name, location, pageable);
     return ResponseEntity.ok(result);

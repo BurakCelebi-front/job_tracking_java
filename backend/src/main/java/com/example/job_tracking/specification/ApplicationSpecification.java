@@ -17,6 +17,6 @@ public class ApplicationSpecification {
     }
 
     public static Specification<Application> hasCompanyId(Long companyId) {
-        return (root, query, cb) -> companyId == null ? null : cb.equal(root.get("id"), companyId);
+        return (root, query, cb) -> companyId == null ? null : cb.equal(root.get("company").get("id"), companyId);
     }
 }

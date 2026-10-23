@@ -19,6 +19,8 @@ import java.util.List;
 @RequestMapping("/api/applications")
 public class ApplicationController {
 
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final ApplicationService applicationService;
 
     public ApplicationController(ApplicationService applicationService) {
@@ -49,7 +51,8 @@ public ResponseEntity<Page<ApplicationResponse>> searchApplications(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size) {
 
-    Pageable pageable = PageRequest.of(page, size);
+    // Clamp paging input so a client cannot request huge pages.
+    Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_PAGE_SIZE));
     Page<ApplicationResponse> result = applicationService.searchApplications(
         authentication.getName(), status, companyId, pageable);
     return ResponseEntity.ok(result);

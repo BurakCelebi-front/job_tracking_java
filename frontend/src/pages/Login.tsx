@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
+import { getErrorMessage } from "../api/client";
 import { MailIcon, LockIcon } from "../components/icons";
 
 // This screen is deliberately independent of the app's light/dark theme
@@ -25,8 +26,8 @@ export default function Login() {
       const response = await login({ email, password });
       authLogin(response.token, email);
       navigate("/");
-    } catch {
-      setError("Login failed. Incorrect email or password.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Login failed. Incorrect email or password."));
     } finally {
       setSubmitting(false);
     }

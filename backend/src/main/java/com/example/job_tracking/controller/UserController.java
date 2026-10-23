@@ -2,6 +2,7 @@ package com.example.job_tracking.controller;
 
 import com.example.job_tracking.dto.UserResponse;
 import com.example.job_tracking.entity.User;
+import com.example.job_tracking.exception.ResourceNotFoundException;
 import com.example.job_tracking.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,7 +26,7 @@ public class UserController {
         String email = authentication.getName();
 
         User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         
         UserResponse response = new UserResponse(user.getId(), user.getFullName(), user.getEmail());
 
