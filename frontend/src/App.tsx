@@ -10,6 +10,8 @@ import ApplicationDetail from "./pages/ApplicationDetail";
 import ApplicationForm from "./pages/ApplicationForm";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -24,6 +26,8 @@ function AppRoutes() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/applications"
         element={

@@ -45,3 +45,20 @@ export async function getCurrentUser(): Promise<CurrentUser> {
 export async function deleteAccount(): Promise<void> {
   await apiClient.delete("/api/auth/me");
 }
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export const forgotPassword = async (data: ForgotPasswordRequest): Promise<void> => {
+  await apiClient.post("/api/auth/forgot-password", data);
+};
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export const resetPassword = async (data: ResetPasswordRequest): Promise<void> => {
+  await apiClient.post("/api/auth/reset-password", data);
+};
