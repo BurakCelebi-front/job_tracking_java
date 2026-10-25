@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.job_tracking.dto.AuthResponse;
 import com.example.job_tracking.dto.LoginRequest;
@@ -92,6 +93,7 @@ public class AuthService {
         return new UserResponse(user.getId(), user.getFullName(), user.getEmail());
     }
 
+    @Transactional
     public void deleteAccount(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
@@ -111,6 +113,7 @@ public class AuthService {
     // Always completes normally whether or not the email is registered — the
     // controller returns the same response either way, so this endpoint
     // can't be used to probe which emails have an account.
+    @Transactional
     public void forgotPassword(String email) {
         userRepository.findByEmail(email).ifPresent(user -> {
             passwordResetTokenRepository.deleteByUser(user);
@@ -126,6 +129,7 @@ public class AuthService {
         });
     }
 
+    @Transactional
     public void resetPassword(String token, String newPassword) {
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or expired reset link."));
