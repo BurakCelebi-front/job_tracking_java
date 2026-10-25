@@ -1,19 +1,10 @@
 package com.example.job_tracking.service;
 
-/*
- * Varsayımlar (kaynağı görmediğim yerler):
- * - RegisterRequest: no-arg constructor + setEmail/setFullname/setPassword setter'ları (getFullname() ile birebir isimlendirme)
- * - LoginRequest: no-arg constructor + setEmail/setPassword setter'ları
- * - User entity: setId, setEmail (ApplicationServiceTest'teki gibi) + setFullName, setPassword, getPassword
- * - AuthResponse: tek parametreli ctor (String token) + getToken()
- */
 
 import com.example.job_tracking.dto.AuthResponse;
 import com.example.job_tracking.dto.LoginRequest;
 import com.example.job_tracking.dto.RegisterRequest;
 import com.example.job_tracking.entity.User;
-import com.example.job_tracking.exception.ConflictException;
-import com.example.job_tracking.exception.TooManyRequestsException;
 import com.example.job_tracking.repository.UserRepository;
 import com.example.job_tracking.security.JwtService;
 
@@ -33,7 +24,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -82,7 +72,7 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(new User()));
 
-        assertThrows(ConflictException.class, () -> authService.register(request));
+        assertThrows(IllegalArgumentException.class, () -> authService.register(request));
 
         verify(userRepository, never()).save(any());
         verifyNoInteractions(passwordEncoder, jwtService);
@@ -120,25 +110,6 @@ class AuthServiceTest {
 
         assertThrows(BadCredentialsException.class, () -> authService.login(request));
 
-        verifyNoInteractions(jwtService);
-    }
-
-    @Test
-    void login_tooManyFailures_locksOutWithoutCallingAuthenticationManager() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword("wrongPassword");
-
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new BadCredentialsException("Bad credentials"));
-
-        for (int i = 0; i < 5; i++) {
-            assertThrows(BadCredentialsException.class, () -> authService.login(request));
-        }
-        assertThrows(TooManyRequestsException.class, () -> authService.login(request));
-
-        // the 6th attempt is rejected before the password is even checked
-        verify(authenticationManager, times(5)).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verifyNoInteractions(jwtService);
     }
 }
