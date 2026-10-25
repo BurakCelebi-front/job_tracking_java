@@ -9,6 +9,8 @@ import Applications from "./pages/Applications";
 import ApplicationDetail from "./pages/ApplicationDetail";
 import ApplicationForm from "./pages/ApplicationForm";
 import Dashboard from "./pages/Dashboard";
+import Settings from "./pages/Settings";
+
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { token } = useAuth();
@@ -59,6 +61,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Companies />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         }
       />

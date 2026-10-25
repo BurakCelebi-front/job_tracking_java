@@ -41,3 +41,7 @@ export async function getCurrentUser(): Promise<CurrentUser> {
   const response = await apiClient.get<CurrentUserResponse>("/api/auth/me");
   return { fullName: response.data.fullName, email: response.data.email };
 }
+
+export async function deleteAccount(): Promise<void> {
+  await apiClient.delete("/api/auth/me");
+}

@@ -11,6 +11,7 @@ interface AppShellProps {
 const navItems = [
   { to: "/applications", label: "Applications" },
   { to: "/companies", label: "Companies" },
+  { to: "/settings", label: "Settings" },
 ];
 
 // Shared layout for every authenticated screen: top nav, theme toggle, logout.
