@@ -12,13 +12,13 @@ public class EmailService {
 
     private final RestClient restClient;
 
-    @Value("${app.mail.from}")
+    @Value("${app.mail.from:test@example.com}")
     private String fromAddress;
 
     // Render's free tier blocks outbound SMTP ports entirely, so email goes
     // out through Brevo's HTTPS API instead of SMTP — see
     // https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports
-    public EmailService(@Value("${app.brevo.api-key}") String brevoApiKey) {
+    public EmailService(@Value("${app.brevo.api-key:}") String brevoApiKey) {
         this.restClient = RestClient.builder()
                 .baseUrl("https://api.brevo.com/v3")
                 .defaultHeader("api-key", brevoApiKey)
