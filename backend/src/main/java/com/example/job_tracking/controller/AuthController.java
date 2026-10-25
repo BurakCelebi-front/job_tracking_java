@@ -1,6 +1,8 @@
 package com.example.job_tracking.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,12 +37,14 @@ public class AuthController {
         return authService.login(request);
     }
 
-    // Returns the currently authenticated user's fullName + email, read from
-    // the JWT. Authentication.getName() is the email — JwtService issues the
-    // token with the email as subject (see login()/register() above), so
-    // whatever authenticates the request already carries it as principal.
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) {
         return authService.getCurrentUser(authentication.getName());
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteAccount(Authentication authentication) {
+        authService.deleteAccount(authentication.getName());
+        return ResponseEntity.noContent().build();
     }
 }
