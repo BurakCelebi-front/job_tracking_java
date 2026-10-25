@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.job_tracking.dto.AuthResponse;
+import com.example.job_tracking.dto.ForgotPasswordRequest;
 import com.example.job_tracking.dto.LoginRequest;
 import com.example.job_tracking.dto.RegisterRequest;
+import com.example.job_tracking.dto.ResetPasswordRequest;
 import com.example.job_tracking.dto.UserResponse;
 import com.example.job_tracking.service.AuthService;
 
@@ -46,5 +48,17 @@ public class AuthController {
     public ResponseEntity<Void> deleteAccount(Authentication authentication) {
         authService.deleteAccount(authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok().build();
     }
 }
