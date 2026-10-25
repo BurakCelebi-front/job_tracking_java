@@ -1,3 +1,5 @@
+[![CI](https://github.com/BurakCelebi-front/job_tracking_java/actions/workflows/ci.yml/badge.svg)](https://github.com/BurakCelebi-front/job_tracking_java/actions/workflows/ci.yml)
+
 # Job Tracker
 
 A full-stack job application tracker: register, save the companies you're applying to, log each application, and move it through a status pipeline (**Applied → Interview → Offer / Rejected**) with a full audit trail of every status change.
