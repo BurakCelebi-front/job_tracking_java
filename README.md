@@ -1,7 +1,5 @@
 # Job Tracker
 
-![CI](https://github.com/BurakCelebi-front/job_tracking_java/actions/workflows/ci.yml/badge.svg)
-
 A full-stack job application tracker: register, save the companies you're applying to, log each application, and move it through a status pipeline (**Applied → Interview → Offer / Rejected**) with a full audit trail of every status change.
 
 This is the **Java + Spring Boot** implementation of the project. It's the first of two planned backends for the same app — a companion **Python + FastAPI** version is planned next, built against the same React frontend and the same feature set, as a hands-on comparison between the two stacks.
@@ -54,6 +52,7 @@ Every authenticated screen (dashboard, companies, applications, application deta
 - Spring Security with a stateless JWT filter chain (`jjwt` 0.13.0)
 - Bean Validation (`spring-boot-starter-validation`)
 - springdoc-openapi (Swagger UI)
+- Brevo HTTPS API for transactional email (password reset) — Render's free tier blocks outbound SMTP ports, so email goes out over HTTPS instead
 - Lombok
 - Maven (wrapper included — no local Maven install needed)
 - JUnit / Spring Boot Test for controller and service tests
@@ -90,12 +89,14 @@ Controller  →  Service  →  Repository  →  Database
 
 ```
 User ──< Company ──< Application ──< StatusHistory
+User ──< PasswordResetToken
 ```
 
 - A **User** owns many **Companies**.
 - A **Company** has many **Applications** (deleting a company with existing applications is blocked server-side).
 - An **Application** belongs to exactly one company and carries a `status` (`APPLIED`, `INTERVIEW`, `OFFER`, `REJECTED`).
 - Every status change — including the initial `APPLIED` on creation — writes a **StatusHistory** row (status, timestamp, optional note), so an application's full timeline can be reconstructed and displayed.
+- A **User** can have a pending **PasswordResetToken**, created by `/auth/forgot-password`: single-use, expires one hour after creation, and any older unused token for that user is deleted when a new one is requested.
 
 ## API endpoints
 
@@ -106,6 +107,9 @@ All routes below are prefixed with `/api` and, except for `/api/auth/*`, require
 | POST | `/auth/register` | Create an account, returns a JWT |
 | POST | `/auth/login` | Authenticate, returns a JWT |
 | GET | `/auth/me` | Current user's id, full name, email |
+| DELETE | `/auth/me` | Delete the current user's account, and all their companies/applications |
+| POST | `/auth/forgot-password` | Request a password-reset email; always returns success so the endpoint can't be used to probe which emails are registered |
+| POST | `/auth/reset-password` | Set a new password from a valid, unexpired reset token |
 | GET | `/companies` | List the caller's companies |
 | POST | `/companies` | Create a company |
 | GET | `/companies/{id}` | Get one company (must be owned by the caller) |
@@ -133,20 +137,14 @@ Once the backend is running, the same contract is browsable at `http://localhost
 
 ### 1. Backend
 
-`backend/src/main/resources/application.properties` is intentionally **not** committed (it holds your local DB credentials and JWT secret). Create it with:
+`backend/src/main/resources/application.properties` is committed with working defaults for local development (`localhost:5432/job_tracking`, a placeholder JWT secret) — no real secrets live in it. Three keys instead read from environment variables (`app.brevo.api-key`, `app.mail.from`, `app.frontend-url`) and fall back to empty/localhost if unset, so the app still boots locally without them — password-reset email just won't send until you export `BREVO_API_KEY` and `MAIL_FROM`.
 
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/job_tracking
-spring.datasource.username=<your-postgres-user>
-spring.datasource.password=<your-postgres-password>
+If your local Postgres setup doesn't match the committed defaults (role `db`, no password, database `job_tracking`), override them with environment variables instead of editing the committed file:
 
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-
-jwt.secret=<a-long-random-string-at-least-32-bytes>
-jwt.expiration-ms=86400000
-
-server.port=8080
+```bash
+export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/job_tracking
+export SPRING_DATASOURCE_USERNAME=<your-postgres-user>
+export SPRING_DATASOURCE_PASSWORD=<your-postgres-password>
 ```
 
 Then run:
@@ -189,6 +187,9 @@ Environment variables (Spring maps `SCREAMING_SNAKE_CASE` env vars to the equiva
 | `JWT_SECRET` | a long random string, generated once for this deployment |
 | `JWT_EXPIRATION_MS` | `86400000` |
 | `CORS_ALLOWED_ORIGINS` | comma-separated allowed origins, e.g. `http://localhost:5173,https://<your-frontend>.vercel.app` |
+| `BREVO_API_KEY` | API key from Brevo → SMTP & API → API Keys (not the SMTP credentials — Render blocks SMTP ports) |
+| `MAIL_FROM` | a sender address verified in Brevo |
+| `APP_FRONTEND_URL` | the deployed frontend's URL, used to build the password-reset link sent by email |
 
 **Frontend — Vercel.** Deployed with `frontend` as the root directory; Vite is auto-detected, so build command and output directory need no changes. One environment variable:
 
@@ -209,7 +210,7 @@ cd backend
 
 Covers: `AuthControllerTest`, `AuthServiceTest`, `CompanyControllerTest`, `CompanyServiceTest`, `ApplicationControllerTest`, `ApplicationServiceTest`, plus a context-load smoke test (`JobTrackingApplicationTests`).
 
-**CI:** every push and pull request runs the backend build + tests against a real PostgreSQL service container, and type-checks + builds the frontend (`.github/workflows/ci.yml`).
+The same suite runs in CI (GitHub Actions) on every push.
 
 ## Testing the API with Postman
 
@@ -226,8 +227,6 @@ A few deliberate choices worth calling out:
 - **Ownership enforced in the service layer**, not just by hiding UI — every company/application lookup is scoped by the caller's id (`findByIdAndOwner`, `findByIdAndUser`), so one user can never read or modify another user's data even by guessing an id.
 - **Dark mode is a CSS variable swap, not a second stylesheet.** Tailwind v4's `@theme` block defines the design tokens once; a `.dark` class on `<html>` overrides the same variable names, so every component that uses `bg-paper`/`text-ink`/etc. is dark-mode-aware for free.
 - **The animated pipeline on the dashboard** (candidate → company → offer/rejection, shown above) is hand-built SVG + SMIL (`<animateMotion>`), not a GIF or a JS animation library — it's a few KB and fully CSS/SVG driven.
-- **Consistent error responses.** A global `@RestControllerAdvice` maps errors to proper status codes with a JSON body (`status`, `error`, `message`, optional per-field `errors`): 400 validation, 401 bad credentials / missing or expired token, 404 not found (also used for other users' data, so ids can't be probed), 409 duplicate email or company still in use, 429 too many failed logins.
-- **Brute-force protection.** After 5 failed logins for the same email within 15 minutes, further attempts are rejected with 429 until the window passes. The counter is in memory — fine for a single instance; multiple instances would need a shared store such as Redis.
 - **English-only UI.** The app was originally built with mixed Turkish/English copy; it was fully translated to English so it reads consistently for any audience reviewing the project.
 
 ## Known limitations
@@ -236,9 +235,10 @@ Being upfront about what's intentionally out of scope for a learning/comparison 
 
 - `UserController` (`/api/users/me`) and `AuthController` (`/api/auth/me`) currently duplicate the same "current user" lookup — a leftover from iterating on the `/me` endpoint. Harmless, but should be collapsed into one.
 - No refresh tokens — a JWT simply expires after `jwt.expiration-ms` and the user has to log in again.
+- No rate limiting or account lockout on login.
 - `spring.jpa.hibernate.ddl-auto=update` is used for the live demo's database too; a real deployment would use versioned migrations (Flyway/Liquibase) instead.
-- The live demo runs on free tiers: Render's free Web Service spins down after ~15 minutes without traffic, so the first request after a while takes about a minute to wake it back up (not a failure — just the free-tier trade-off). Supabase pauses a free project after a week of total inactivity; a scheduled GitHub Action (`.github/workflows/keep-alive.yml`) calls `GET /api/health` — which runs a database query — every 3 days to prevent that. (GitHub disables scheduled workflows after 60 days without repository activity; re-enable it from the Actions tab if that happens.)
-- The account lockout is keyed by email, so someone who knows a user's email could deliberately lock that account for 15 minutes. A production setup would combine it with per-IP limits and CAPTCHA.
+- CI (GitHub Actions) runs the test suite on every push; it doesn't deploy — Render and Vercel redeploy on push independently.
+- The live demo runs on free tiers: Render's free Web Service spins down after ~15 minutes without traffic, so the first request after a while takes about a minute to wake it back up (not a failure — just the free-tier trade-off). Supabase pauses a free project after a week of total inactivity, restorable with one click from its dashboard.
 
 ## Roadmap
 
