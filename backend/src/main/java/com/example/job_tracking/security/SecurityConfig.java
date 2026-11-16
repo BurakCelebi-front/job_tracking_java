@@ -40,7 +40,7 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.DELETE, "/api/auth/me").authenticated()
-            .requestMatchers("/api/auth/**", "/error", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+            .requestMatchers("/api/auth/**", "/api/health", "/error", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
             .anyRequest().authenticated()
         )
         // Missing/invalid/expired token -> 401 (the default without form/basic login is 403),
